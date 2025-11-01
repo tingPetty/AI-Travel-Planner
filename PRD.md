@@ -194,19 +194,33 @@ AI旅行规划师是一款基于人工智能的Web应用，旨在通过智能化
 
 ### 4.3 数据库设计
 
-#### 4.3.1 核心数据表
-- **用户表 (users)**：用户基本信息
-- **行程表 (trips)**：旅行计划主表
-- **行程详情表 (trip_details)**：具体行程安排
+#### 4.3.1 核心数据表（MVP简化版本）
+- **用户表 (users)**：用户基本信息和偏好设置
+  - 基本字段：id, username, email, password_hash, created_at, updated_at
+  - 偏好字段：preferences (JSON格式存储旅行偏好)
+  
+- **行程表 (trips)**：旅行计划主表和详细行程
+  - 基本字段：id, user_id, title, destination, start_date, end_date, budget, status
+  - 详细字段：itinerary (JSON格式存储具体行程安排)
+  - 元数据：created_at, updated_at
+  
 - **费用记录表 (expenses)**：费用记录
-- **用户偏好表 (user_preferences)**：用户偏好设置
-- **地点信息表 (places)**：景点、餐厅等地点信息
+  - 字段：id, trip_id, amount, category, description, expense_date, created_at
 
-#### 4.3.2 数据关系
-- 用户 1:N 行程
-- 行程 1:N 行程详情
-- 行程 1:N 费用记录
-- 用户 1:1 用户偏好
+#### 4.3.2 数据关系（简化版本）
+- 用户 1:N 行程 (users.id → trips.user_id)
+- 行程 1:N 费用记录 (trips.id → expenses.trip_id)
+
+#### 4.3.3 设计说明
+**简化原因**：
+1. **trip_details表合并**：将行程详情以JSON格式存储在trips表的itinerary字段中，减少表关联复杂度
+2. **user_preferences表合并**：将用户偏好以JSON格式存储在users表的preferences字段中
+3. **places表暂时移除**：MVP阶段直接使用地图API获取地点信息，无需本地存储
+
+**扩展性考虑**：
+- JSON字段便于存储复杂的行程数据和用户偏好
+- 后期如需优化查询性能，可将JSON字段拆分为独立表
+- 使用SQLite的JSON支持功能，便于开发和查询
 
 ## 5. UI/UX设计要求
 
@@ -346,4 +360,4 @@ AI旅行规划师是一款基于人工智能的Web应用，旨在通过智能化
 
 ---
 
-**文档版本**：v1.0  
+**文档版本**：v1.0

@@ -1,261 +1,231 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
 
-const message = ref('Hello World! AI旅行规划助手前端测试成功！')
-const currentTime = ref(new Date().toLocaleString())
-const apiStatus = ref('检测中...')
-const apiData = ref<any>(null)
-const testMessage = ref('')
-const echoResult = ref('')
+const router = useRouter()
+const authStore = useAuthStore()
 
-// API基础地址
-const API_BASE_URL = 'http://localhost:8000'
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const user = computed(() => authStore.user)
 
-// 测试后端连接
-const testBackendConnection = async () => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/`)
-    apiStatus.value = '✅ 连接成功'
-    apiData.value = response.data
-  } catch (error) {
-    apiStatus.value = '❌ 连接失败'
-    console.error('Backend connection failed:', error)
-  }
+const handleLogin = () => {
+  router.push('/login')
 }
 
-// 测试API接口
-const testAPI = async () => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/test`)
-    console.log('API Test Response:', response.data)
-  } catch (error) {
-    console.error('API test failed:', error)
-  }
+const handleRegister = () => {
+  router.push('/register')
 }
 
-// 测试回声接口
-const testEcho = async () => {
-  if (!testMessage.value.trim()) {
-    echoResult.value = '请输入测试消息'
-    return
-  }
-  
+const handleLogout = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/test/echo/${encodeURIComponent(testMessage.value)}`)
-    echoResult.value = response.data.echo
+    await authStore.logout()
+    ElMessage.success('退出登录成功')
+    router.push('/')
   } catch (error) {
-    echoResult.value = '回声测试失败'
-    console.error('Echo test failed:', error)
+    ElMessage.error('退出登录失败')
   }
 }
-
-onMounted(() => {
-  testBackendConnection()
-})
 </script>
 
 <template>
   <div class="app">
-    <header class="header">
-      <h1>🌍 AI旅行规划助手</h1>
-      <p class="subtitle">前端 Hello World 测试</p>
-    </header>
+    <!-- 导航栏 -->
+    <el-header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <router-link to="/" class="logo-link">
+            <el-icon class="logo-icon"><Location /></el-icon>
+            <span class="logo-text">AI旅行规划师</span>
+          </router-link>
+        </div>
+        
+        <nav class="nav">
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/about" class="nav-link">关于</router-link>
+        </nav>
+        
+        <div class="auth-section">
+          <template v-if="!isAuthenticated">
+            <el-button @click="handleLogin" type="primary" plain color="#4f7942">登录</el-button>
+            <el-button @click="handleRegister" type="primary" color="#4f7942">注册</el-button>
+          </template>
+          <template v-else>
+            <el-dropdown @command="handleLogout">
+              <span class="user-info">
+                <el-icon><User /></el-icon>
+                {{ user?.username }}
+                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </template>
+        </div>
+      </div>
+    </el-header>
     
-    <main class="main">
-      <div class="card">
-        <h2>{{ message }}</h2>
-        <p>当前时间: {{ currentTime }}</p>
-        <div class="status">
-          <span class="status-item">✅ Vue 3</span>
-          <span class="status-item">✅ TypeScript</span>
-          <span class="status-item">✅ Vite</span>
-          <span class="status-item">✅ 开发服务器</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🔗 前后端连通性测试</h3>
-        <div class="api-test">
-          <p><strong>后端状态:</strong> {{ apiStatus }}</p>
-          <div v-if="apiData" class="api-info">
-            <p><strong>API信息:</strong> {{ apiData.message }}</p>
-            <p><strong>版本:</strong> {{ apiData.version }}</p>
-            <p><strong>描述:</strong> {{ apiData.description }}</p>
-          </div>
-          
-          <div class="test-section">
-            <h4>回声测试</h4>
-            <div class="input-group">
-              <input 
-                v-model="testMessage" 
-                type="text" 
-                placeholder="输入测试消息"
-                @keyup.enter="testEcho"
-              />
-              <button @click="testEcho" class="test-btn">发送</button>
-            </div>
-            <p v-if="echoResult" class="echo-result">{{ echoResult }}</p>
-          </div>
-          
-          <button @click="testAPI" class="test-btn">测试API接口</button>
-        </div>
-      </div>
-    </main>
+    <!-- 主要内容区域 -->
+    <el-main class="main">
+      <router-view />
+    </el-main>
   </div>
 </template>
 
 <style scoped>
+/* 全局重置和基础样式 */
+* {
+  box-sizing: border-box;
+}
+
 .app {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  margin: 0;
+  padding: 0;
 }
 
 .header {
-  text-align: center;
-  color: white;
-  margin-bottom: 2rem;
+  background: white;
+  border-bottom: 1px solid #edf2ed;
+  box-shadow: 0 2px 12px 0 rgba(143, 188, 143, 0.08);
+  height: 60px;
+  padding: 0;
+  width: 100%;
 }
 
-.header h1 {
-  font-size: 3rem;
-  margin: 0;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  width: 100%;
 }
 
-.subtitle {
-  font-size: 1.2rem;
-  margin: 0.5rem 0 0 0;
-  opacity: 0.9;
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #8fbc8f;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.logo-icon {
+  font-size: 24px;
+  margin-right: 8px;
+  color: #8fbc8f;
+}
+
+.logo-text {
+  color: #6b8e6b;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #606266;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.router-link-active {
+  color: #8fbc8f;
+  background-color: #f8faf8;
+}
+
+.auth-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606266;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.user-info:hover {
+  background-color: #f8faf8;
+  color: #8fbc8f;
 }
 
 .main {
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.card {
-  background: white;
-  border-radius: 15px;
-  padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.card h2 {
-  color: #333;
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
-
-.card h3 {
-  color: #333;
-  margin: 0 0 1rem 0;
-  font-size: 1.3rem;
-}
-
-.card h4 {
-  color: #555;
-  margin: 1rem 0 0.5rem 0;
-  font-size: 1.1rem;
-}
-
-.card p {
-  color: #666;
-  margin: 1rem 0;
-  font-size: 1.1rem;
-}
-
-.status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.status-item {
-  background: #4CAF50;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.api-test {
-  text-align: left;
-}
-
-.api-info {
-  background: #f5f5f5;
-  padding: 1rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-
-.test-section {
-  margin: 1.5rem 0;
-}
-
-.input-group {
-  display: flex;
-  gap: 10px;
-  margin: 0.5rem 0;
-}
-
-.input-group input {
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1rem;
+  background-color: #f8faf8;
+  padding: 20px;
+  width: 100%;
+  min-height: calc(100vh - 60px);
 }
 
-.test-btn {
-  background: #2196F3;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
-}
-
-.test-btn:hover {
-  background: #1976D2;
-}
-
-.echo-result {
-  background: #e8f5e8;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 10px;
-  color: #2e7d32;
-  font-weight: 500;
-}
-
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .header h1 {
-    font-size: 2rem;
+  .header-content {
+    padding: 0 15px;
   }
   
-  .card {
-    padding: 1.5rem;
+  .nav {
+    display: none;
   }
   
-  .status {
-    flex-direction: column;
-    align-items: center;
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .auth-section {
+    gap: 8px;
+  }
+  
+  .auth-section .el-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 0 10px;
+  }
+  
+  .logo-text {
+    display: none;
+  }
+  
+  .auth-section .el-button span {
+    display: none;
+  }
+  
+  .auth-section .el-button {
+    padding: 8px;
+    min-width: auto;
   }
 }
 </style>
