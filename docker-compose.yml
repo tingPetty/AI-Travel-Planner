@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - travel-planner-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./travel_planner.db
+      - DEBUG=False
+    volumes:
+      - ./backend/data:/app/data
+    networks:
+      - travel-planner-network
+
+networks:
+  travel-planner-network:
+    driver: bridge
+
+volumes:
+  backend-data:
