@@ -5,11 +5,16 @@
 </template>
 
 <style>
+.about {
+  padding: 20px;
+}
+
 @media (min-width: 1024px) {
   .about {
     min-height: 100vh;
     display: flex;
     align-items: center;
+    padding: 20px;
   }
 }
 </style>

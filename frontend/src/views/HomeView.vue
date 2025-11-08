@@ -39,9 +39,11 @@ const user = computed(() => authStore.user)
         <div class="welcome-back" v-else>
           <h2>欢迎回来，{{ user?.username }}！</h2>
           <p>准备好开始您的下一次旅行了吗？</p>
-          <el-button type="primary" size="large" color="#4f7942">
-            创建新的旅行计划
-          </el-button>
+          <router-link to="/dashboard">
+            <el-button type="primary" size="large" color="#4f7942">
+              进入我的行程
+            </el-button>
+          </router-link>
         </div>
       </div>
     </div>
@@ -109,6 +111,7 @@ const user = computed(() => authStore.user)
 <style scoped>
 .home {
   min-height: calc(100vh - 60px);
+  padding: 20px;
 }
 
 /* 英雄区域 */

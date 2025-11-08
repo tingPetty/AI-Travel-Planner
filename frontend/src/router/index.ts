@@ -28,6 +28,18 @@ const router = createRouter({
       name: 'register',
       component: () => import('../views/RegisterView.vue'),
       meta: { requiresAuth: false, hideForAuth: true }
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/DashboardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/edit-trip/:id',
+      name: 'edit-trip',
+      component: () => import('../views/EditTripView.vue'),
+      meta: { requiresAuth: true }
     }
   ],
 })

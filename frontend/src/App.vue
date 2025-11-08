@@ -43,6 +43,7 @@ const handleLogout = async () => {
         
         <nav class="nav">
           <router-link to="/" class="nav-link">首页</router-link>
+          <router-link v-if="isAuthenticated" to="/dashboard" class="nav-link">我的行程</router-link>
           <router-link to="/about" class="nav-link">关于</router-link>
         </nav>
         
@@ -181,7 +182,7 @@ const handleLogout = async () => {
 .main {
   flex: 1;
   background-color: #f8faf8;
-  padding: 20px;
+  padding: 0;
   width: 100%;
   min-height: calc(100vh - 60px);
 }

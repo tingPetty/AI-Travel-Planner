@@ -22,31 +22,31 @@ def view_database():
         print("=" * 50)
         
         # 查看用户数据
-        print("\n📋 用户数据:")
-        users = db.query(User).all()
-        for user in users:
-            print(f"  ID: {user.id}")
-            print(f"  用户名: {user.username}")
-            print(f"  邮箱: {user.email}")
-            print(f"  偏好设置: {user.preferences}")
-            print(f"  创建时间: {user.created_at}")
-            print("-" * 30)
+        # print("\n📋 用户数据:")
+        # users = db.query(User).all()
+        # for user in users:
+        #     print(f"  ID: {user.id}")
+        #     print(f"  用户名: {user.username}")
+        #     print(f"  邮箱: {user.email}")
+        #     print(f"  偏好设置: {user.preferences}")
+        #     print(f"  创建时间: {user.created_at}")
+        #     print("-" * 30)
         
         # 查看行程数据
-        # print("\n🗺️ 行程数据:")
-        # trips = db.query(Trip).all()
-        # for trip in trips:
-        #     print(f"  ID: {trip.id}")
-        #     print(f"  用户ID: {trip.user_id}")
-        #     print(f"  标题: {trip.title}")
-        #     print(f"  目的地: {trip.destination}")
-        #     print(f"  开始日期: {trip.start_date}")
-        #     print(f"  结束日期: {trip.end_date}")
-        #     print(f"  预算: {trip.budget}")
-        #     print(f"  状态: {trip.status}")
-        #     print(f"  行程天数: {trip.duration_days}")
-        #     print(f"  详细行程: {trip.itinerary}")
-        #     print("-" * 30)
+        print("\n🗺️ 行程数据:")
+        trips = db.query(Trip).all()
+        for trip in trips:
+            print(f"  ID: {trip.id}")
+            print(f"  用户ID: {trip.user_id}")
+            print(f"  标题: {trip.title}")
+            print(f"  目的地: {trip.destination}")
+            print(f"  开始日期: {trip.start_date}")
+            print(f"  结束日期: {trip.end_date}")
+            print(f"  预算: {trip.budget}")
+            print(f"  状态: {trip.status}")
+            print(f"  行程天数: {trip.duration_days}")
+            print(f"  详细行程: {trip.itinerary}")
+            print("-" * 30)
         
         # # 查看费用数据
         # print("\n💰 费用记录:")
