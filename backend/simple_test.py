@@ -48,7 +48,7 @@ def test_api():
         "end_date": "2025-11-04",
         "budget": 1000,
         "preferences": "美食, 文化, 自然风光",
-        "travel_style": "休闲度假"
+        "travelers": 2
     }
     
     print(f"📤 发送行程生成请求...")

@@ -23,6 +23,7 @@ class Trip(Base):
     start_date = Column(DateTime, nullable=False, comment="开始日期")
     end_date = Column(DateTime, nullable=False, comment="结束日期")
     budget = Column(Numeric(10, 2), nullable=True, comment="预算金额")
+    travelers = Column(Integer, nullable=True, comment="旅行人数")
     status = Column(String(20), default="planning", comment="行程状态: planning, ongoing, completed, cancelled")
     
     # 详细字段 (JSON格式存储)
@@ -51,6 +52,7 @@ class Trip(Base):
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "budget": float(self.budget) if self.budget else None,
+            "travelers": self.travelers,
             "status": self.status,
             "itinerary": self.itinerary,
             "created_at": self.created_at.isoformat() if self.created_at else None,

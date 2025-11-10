@@ -11,6 +11,7 @@ export interface ItineraryGenerateRequest {
   end_date: string
   budget?: number
   preferences?: string
+  travelers?: number
   travel_style?: string
   title?: string
 }
@@ -41,6 +42,7 @@ export interface ItineraryResponse {
   start_date: string
   end_date: string
   budget?: number
+  travelers?: number
   status: string
   itinerary?: Record<string, DayItinerary>
   created_at: string
@@ -54,8 +56,11 @@ export interface ItineraryListResponse {
   destination: string
   start_date: string
   end_date: string
+  travelers?: number
   status: string
   created_at: string
+  budget: number
+  
 }
 
 // 生成行程响应接口

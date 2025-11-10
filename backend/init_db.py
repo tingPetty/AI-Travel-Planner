@@ -88,6 +88,7 @@ def init_database():
                 start_date=datetime.now() + timedelta(days=30),
                 end_date=datetime.now() + timedelta(days=32),
                 budget=Decimal("3000.00"),
+                travelers=2,
                 status="planning",
                 itinerary={
                     "day1": {
@@ -142,6 +143,7 @@ def init_database():
                 start_date=datetime.now() + timedelta(days=15),
                 end_date=datetime.now() + timedelta(days=16),
                 budget=Decimal("2000.00"),
+                travelers=1,
                 status="planning",
                 itinerary={
                     "day1": {

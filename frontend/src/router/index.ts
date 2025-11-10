@@ -36,6 +36,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/new-trip',
+      name: 'new-trip',
+      component: () => import('../views/NewTripView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/edit-trip/:id',
       name: 'edit-trip',
       component: () => import('../views/EditTripView.vue'),

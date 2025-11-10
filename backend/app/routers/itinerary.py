@@ -48,7 +48,7 @@ async def generate_itinerary(
             end_date=request.end_date,
             budget=request.budget,
             preferences=request.preferences,
-            travel_style=request.travel_style
+            travelers=request.travelers
         )
         
         if not ai_result["success"]:
@@ -69,6 +69,7 @@ async def generate_itinerary(
             start_date=start_date,
             end_date=end_date,
             budget=request.budget,
+            travelers=request.travelers,
             status="planning",
             itinerary=ai_result["data"]
         )
@@ -86,6 +87,7 @@ async def generate_itinerary(
             start_date=trip.start_date,
             end_date=trip.end_date,
             budget=trip.budget,
+            travelers=trip.travelers,
             status=trip.status,
             itinerary=trip.itinerary,
             created_at=trip.created_at,
@@ -124,6 +126,7 @@ async def get_itineraries(
             destination=trip.destination,
             start_date=trip.start_date,
             end_date=trip.end_date,
+            travelers=trip.travelers,
             status=trip.status,
             created_at=trip.created_at
         )
@@ -156,6 +159,7 @@ async def get_itinerary(
         start_date=trip.start_date,
         end_date=trip.end_date,
         budget=trip.budget,
+        travelers=trip.travelers,
         status=trip.status,
         itinerary=trip.itinerary,
         created_at=trip.created_at,
@@ -189,6 +193,8 @@ async def update_itinerary(
             trip.destination = request.destination
         if request.budget is not None:
             trip.budget = request.budget
+        if request.travelers is not None:
+            trip.travelers = request.travelers
         if request.status is not None:
             trip.status = request.status
         if request.itinerary is not None:

@@ -17,7 +17,7 @@ const request = axios.create({
 request.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -44,9 +44,10 @@ request.interceptors.response.use(
       
       switch (status) {
         case 401:
-          ElMessage.error('未授权，请重新登录')
+          ElMessage.error('未授权或登录已过期，请重新登录')
           // 清除token并跳转到登录页
-          localStorage.removeItem('access_token')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
           window.location.href = '/login'
           break
         case 403:

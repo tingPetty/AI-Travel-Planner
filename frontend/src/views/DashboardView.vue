@@ -1,49 +1,56 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Calendar, Money, Edit, Delete, MapLocation } from '@element-plus/icons-vue'
 import { 
-  generateItinerary, 
   getItineraryList, 
   deleteItinerary as deleteItineraryAPI,
   type ItineraryListResponse,
-  type ItineraryGenerateRequest 
 } from '@/api/itinerary'
+import { getExpenses, getBudgetSummary, type ExpenseResponse, type BudgetSummaryResponse } from '@/api/budget'
+import BudgetSummary from '@/components/budget/BudgetSummary.vue'
+import ExpenseDialog from '@/components/budget/ExpenseDialog.vue'
 
 // 路由
 const router = useRouter()
 
 // 响应式数据
 const activeMenu = ref('itinerary')
-const dialogVisible = ref(false)
 const loading = ref(false)
 const trips = ref<ItineraryListResponse[]>([])
-
-// 新建行程表单
-const newTripForm = reactive({
-  title: '',
-  destination: '',
-  startDate: '',
-  endDate: '',
-  budget: null,
-  travelers: 1,
-  preferences: [],
-  description: '',
-  travel_style: ''
-})
+// 预算管理相关
+const selectedTripId = ref<number | null>(null)
+const expenses = ref<ExpenseResponse[]>([])
+const summary = ref<BudgetSummaryResponse | null>(null)
+const budgetLoading = ref(false)
+const showExpenseDialog = ref(false)
+// 费用列表等宽列宽计算
+const expensesTableRef = ref<any | null>(null)
+const colWidth = ref(240)
+const updateColWidth = () => {
+  try {
+    const el = expensesTableRef.value?.$el ?? expensesTableRef.value
+    const width = el?.clientWidth || 960
+    colWidth.value = Math.max(200, Math.floor(width / 4))
+  } catch {
+    // 回退列宽
+    colWidth.value = 240
+  }
+}
+// 新建行程迁移为独立页面，此处不再维护表单状态
 
 // 旅行偏好选项
-const preferenceOptions = [
-  { label: '美食', value: 'food' },
-  { label: '文化', value: 'culture' },
-  { label: '自然风光', value: 'nature' },
-  { label: '购物', value: 'shopping' },
-  { label: '历史古迹', value: 'history' },
-  { label: '冒险运动', value: 'adventure' },
-  { label: '放松度假', value: 'relaxation' },
-  { label: '摄影', value: 'photography' }
-]
+// const preferenceOptions = [
+//   { label: '美食', value: 'food' },
+//   { label: '文化', value: 'culture' },
+//   { label: '自然风光', value: 'nature' },
+//   { label: '购物', value: 'shopping' },
+//   { label: '历史古迹', value: 'history' },
+//   { label: '冒险运动', value: 'adventure' },
+//   { label: '放松度假', value: 'relaxation' },
+//   { label: '摄影', value: 'photography' }
+// ]
 
 // 计算属性
 const filteredTrips = computed(() => {
@@ -85,6 +92,13 @@ const loadTrips = async () => {
 // 组件挂载时加载数据
 onMounted(() => {
   loadTrips()
+  // 初始化并监听窗口尺寸变化，保证四列等宽
+  nextTick(updateColWidth)
+  window.addEventListener('resize', updateColWidth)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateColWidth)
 })
 
 // 方法
@@ -93,101 +107,10 @@ const handleMenuSelect = (key: string) => {
 }
 
 const openNewTripDialog = () => {
-  dialogVisible.value = true
+  router.push('/new-trip')
 }
 
-const closeDialog = () => {
-  dialogVisible.value = false
-  resetForm()
-}
-
-const resetForm = () => {
-  Object.assign(newTripForm, {
-    title: '',
-    destination: '',
-    startDate: '',
-    endDate: '',
-    budget: null,
-    travelers: 1,
-    preferences: [],
-    description: '',
-    travel_style: ''
-  })
-}
-
-const submitTrip = async () => {
-  try {
-    // 表单验证
-    if (!newTripForm.title || !newTripForm.destination || !newTripForm.startDate || !newTripForm.endDate) {
-      ElMessage.warning('请填写必要信息')
-      return
-    }
-
-    loading.value = true
-    
-    // 构建请求数据
-    const requestData: ItineraryGenerateRequest = {
-      title: newTripForm.title,
-      destination: newTripForm.destination,
-      start_date: formatDateForAPI(newTripForm.startDate),
-      end_date: formatDateForAPI(newTripForm.endDate),
-      budget: newTripForm.budget || undefined,
-      preferences: newTripForm.preferences.join(', '),
-      travel_style: newTripForm.travel_style || undefined
-    }
-
-    console.log('发送请求数据:', requestData)
-    ElMessage.info('正在调用AI生成行程，请稍候...')
-    
-    // 调用AI生成行程API
-    const response = await generateItinerary(requestData)
-    console.log('API响应:', response)
-    
-    if (response.success && response.data) {
-      ElMessage.success('AI行程生成成功！')
-      // 先关闭对话框，再重新加载数据
-      closeDialog()
-      // 延迟重新加载，避免渲染冲突
-      setTimeout(async () => {
-        await loadTrips()
-      }, 100)
-    } else {
-      ElMessage.error(response.message || 'AI行程生成失败')
-      closeDialog()
-    }
-    
-  } catch (error: any) {
-    console.error('API请求错误:', error)
-    
-    // 检查是否是422验证错误
-    if (error.response?.status === 422) {
-      console.error('验证错误详情:', error.response.data)
-      
-      // 安全地处理验证错误信息
-      let errorMessage = '请求数据格式错误，请检查输入信息'
-      
-      if (error.response.data?.detail) {
-        if (Array.isArray(error.response.data.detail)) {
-          // 如果是数组，提取第一个错误信息
-          const firstError = error.response.data.detail[0]
-          if (firstError?.msg) {
-            errorMessage = `数据验证失败: ${firstError.msg}`
-          }
-        } else if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail
-        }
-      }
-      
-      ElMessage.error(errorMessage)
-    } else {
-      ElMessage.error(error.response?.data?.detail || '生成行程失败，请重试')
-    }
-    
-    closeDialog()
-  } finally {
-    loading.value = false
-  }
-}
+// 新建行程提交逻辑已迁移到新页面
 
 const editTrip = (trip: any) => {
   router.push(`/edit-trip/${trip.id}`)
@@ -225,24 +148,71 @@ const getStatusType = (status: string) => {
   return statusMap[status] || 'info'
 }
 
+// 类别中文映射，后端保存英文枚举，前端统一中文展示
+const categoryLabels: Record<string, string> = {
+  transport: '交通',
+  accommodation: '住宿',
+  food: '食物',
+  entertainment: '娱乐',
+  shopping: '购物',
+  other: '其他'
+}
+const formatCategory = (val: string) => categoryLabels[val] ?? val
+
 // 格式化日期显示
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('zh-CN')
 }
 
-// 格式化日期为YYYY-MM-DD格式
-const formatDateForAPI = (date: Date | string | null): string => {
-  if (!date) return ''
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(dateObj.getTime())) return ''
-  
-  const year = dateObj.getFullYear()
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
-  const day = String(dateObj.getDate()).padStart(2, '0')
-  
-  return `${year}-${month}-${day}`
+// 格式化日期工具仅用于展示
+// 预算管理：加载指定行程的费用与汇总
+const loadBudgetData = async (tripId: number) => {
+  try {
+    budgetLoading.value = true
+    const [list, sum] = await Promise.all([
+      getExpenses(tripId),
+      getBudgetSummary(tripId)
+    ])
+    expenses.value = list
+    summary.value = sum
+    await nextTick()
+    updateColWidth()
+  } catch (e) {
+    console.error('加载费用/汇总失败:', e)
+    ElMessage.error('加载费用数据失败')
+  } finally {
+    budgetLoading.value = false
+  }
 }
+
+// 当行程数据加载完成后默认选中第一个并加载预算数据
+watch(trips, (val) => {
+  if (activeMenu.value === 'budget' && val.length > 0 && selectedTripId.value == null) {
+    selectedTripId.value = val[0].id
+    loadBudgetData(selectedTripId.value)
+  }
+})
+
+watch(activeMenu, (menu) => {
+  if (menu === 'budget' && trips.value.length > 0) {
+    if (selectedTripId.value == null) {
+      selectedTripId.value = trips.value[0].id
+    }
+    loadBudgetData(selectedTripId.value!)
+  }
+})
+
+const onTripChange = (val: number) => {
+  selectedTripId.value = val
+  loadBudgetData(val)
+}
+
+const onExpenseCreated = () => {
+  if (selectedTripId.value) {
+    loadBudgetData(selectedTripId.value)
+  }
+}
+
 </script>
 
 <template>
@@ -317,7 +287,7 @@ const formatDateForAPI = (date: Date | string | null): string => {
                 </div>
               </div>
               
-              <p class="trip-description">{{ trip.description || '暂无描述' }}</p>
+              <!-- <p class="trip-description">{{ trip.description || '暂无描述' }}</p> -->
             </div>
             
             <div class="card-actions">
@@ -358,140 +328,57 @@ const formatDateForAPI = (date: Date | string | null): string => {
       </div>
 
       <!-- 费用管理页面 -->
-      <div v-else-if="activeMenu === 'budget'" class="content-section">
+      <div v-else-if="activeMenu === 'budget'" class="content-section budget-section">
         <div class="section-header">
           <h2>费用管理</h2>
+          <el-button type="primary" :icon="Plus" color="#4f7942" @click="showExpenseDialog = true" :disabled="!selectedTripId">
+            新建费用记录
+          </el-button>
         </div>
-        <div class="coming-soon">
-          <el-result
-            icon="info"
-            title="功能开发中"
-            sub-title="费用管理功能正在开发中，敬请期待..."
-          />
+
+        <!-- 选择行程 -->
+        <div class="filter-bar">
+          <el-select v-model="selectedTripId" placeholder="选择行程" @change="onTripChange" style="width: 320px">
+            <el-option v-for="trip in trips" :key="trip.id" :label="`#${trip.id} - ${trip.title}`" :value="trip.id" />
+          </el-select>
         </div>
+
+        <!-- 汇总卡片 -->
+        <BudgetSummary :summary="summary" />
+
+        <!-- 费用列表 -->
+        <el-card class="expenses-card" v-loading="budgetLoading">
+          <template #header>
+            <div class="card-header">
+              <span>当前行程开销</span>
+            </div>
+          </template>
+          <el-table ref="expensesTableRef" :data="expenses" stripe class="expenses-table">
+            <el-table-column prop="expense_date" label="日期" :width="colWidth" align="center">
+              <template #default="scope">
+                {{ formatDate(scope.row.expense_date) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="amount" label="金额" :width="colWidth" align="center">
+              <template #default="scope">
+                ¥{{ Number(scope.row.amount).toFixed(2) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="category" label="类别" :width="colWidth" align="center">
+              <template #default="scope">
+                {{ formatCategory(scope.row.category) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="description" label="描述" :width="colWidth" show-overflow-tooltip align="center" />
+          </el-table>
+        </el-card>
+
+        <!-- 新建费用弹窗 -->
+        <ExpenseDialog v-model:visible="showExpenseDialog" :trip-id="selectedTripId" @created="onExpenseCreated" />
       </div>
     </div>
 
-    <!-- 新建行程对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      title="新建旅行计划"
-      width="600px"
-      @close="closeDialog"
-    >
-      <el-form :model="newTripForm" label-width="100px">
-        <el-form-item label="行程标题" required>
-          <el-input 
-            v-model="newTripForm.title" 
-            placeholder="给您的旅行起个名字"
-          />
-        </el-form-item>
-        
-        <el-form-item label="目的地" required>
-          <el-input 
-            v-model="newTripForm.destination" 
-            placeholder="您想去哪里？"
-          />
-        </el-form-item>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="开始日期" required>
-              <el-date-picker
-                v-model="newTripForm.startDate"
-                type="date"
-                placeholder="选择开始日期"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="结束日期" required>
-              <el-date-picker
-                v-model="newTripForm.endDate"
-                type="date"
-                placeholder="选择结束日期"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="预算">
-              <el-input-number
-                v-model="newTripForm.budget"
-                :min="0"
-                :step="100"
-                placeholder="预算金额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="同行人数">
-              <el-input-number
-                v-model="newTripForm.travelers"
-                :min="1"
-                :max="20"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-form-item label="旅行偏好">
-          <el-checkbox-group v-model="newTripForm.preferences">
-            <el-checkbox 
-              v-for="option in preferenceOptions" 
-              :key="option.value"
-              :label="option.value"
-            >
-              {{ option.label }}
-            </el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-        
-        <el-form-item label="旅行风格">
-          <el-select 
-            v-model="newTripForm.travel_style" 
-            placeholder="选择您的旅行风格"
-            style="width: 100%"
-          >
-            <el-option label="休闲度假" value="leisure" />
-            <el-option label="深度体验" value="cultural" />
-            <el-option label="冒险探索" value="adventure" />
-            <el-option label="奢华享受" value="luxury" />
-            <el-option label="经济实惠" value="budget" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="备注">
-          <el-input
-            v-model="newTripForm.description"
-            type="textarea"
-            :rows="3"
-            placeholder="其他需求或特殊说明..."
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="closeDialog" :disabled="loading">取消</el-button>
-          <el-button 
-            type="primary" 
-            @click="submitTrip" 
-            color="#4f7942"
-            :loading="loading"
-            :disabled="loading"
-          >
-            {{ loading ? '正在生成行程...' : '创建并生成行程' }}
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+    
   </div>
 </template>
 
@@ -651,6 +538,36 @@ const formatDateForAPI = (date: Date | string | null): string => {
   justify-content: center;
   align-items: center;
   height: 400px;
+}
+
+/* 费用管理样式 */
+.budget-section .filter-bar {
+  margin-bottom: 16px;
+}
+.expenses-card {
+  border-radius: 12px;
+  border: 1px solid #edf2ed;
+  box-shadow: 0 2px 12px rgba(143, 188, 143, 0.08);
+}
+.expenses-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.expenses-card .card-header span {
+  color: #6b8e6b;
+  font-weight: 600;
+}
+
+/* 让费用表格四列等宽且更易读 */
+.expenses-table :deep(.el-table__header),
+.expenses-table :deep(.el-table__body) {
+  table-layout: fixed;
+}
+.expenses-table :deep(.el-table__cell) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 对话框样式 */

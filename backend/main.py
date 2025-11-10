@@ -5,7 +5,7 @@ AI Travel Planner - FastAPI Backend
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, itinerary, budget
+from app.routers import auth, itinerary, budget, speech_recognition, text_parse
 import uvicorn
 
 # 创建 FastAPI 应用实例
@@ -28,6 +28,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(itinerary.router, prefix="/api/itinerary", tags=["行程规划"])
 app.include_router(budget.router, prefix="/api/budget", tags=["预算管理"])
+app.include_router(speech_recognition.router, prefix="/api/speech", tags=["语音识别"])
+app.include_router(text_parse.router, prefix="/api/text", tags=["文本解析"])
 
 @app.get("/")
 async def root():

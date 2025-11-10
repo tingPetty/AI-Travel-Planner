@@ -199,6 +199,7 @@ const formData = reactive({
   start_date: '',
   end_date: '',
   budget: 0,
+  travelers: 1,
   status: 'planning',
   itinerary: null as any
 })
@@ -234,6 +235,7 @@ const loadTripData = async () => {
     formData.start_date = response.start_date.split('T')[0] // 格式化日期
     formData.end_date = response.end_date.split('T')[0]
     formData.budget = response.budget || 0
+    formData.travelers = response.travelers || 1
     formData.status = response.status
     formData.itinerary = response.itinerary
     

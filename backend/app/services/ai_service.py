@@ -32,7 +32,7 @@ class AIService:
         end_date: str,
         budget: Optional[float] = None,
         preferences: Optional[str] = None,
-        travel_style: Optional[str] = None
+        travelers: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         生成详细行程规划
@@ -43,7 +43,6 @@ class AIService:
             end_date: 结束日期 (YYYY-MM-DD)
             budget: 预算金额
             preferences: 用户偏好
-            travel_style: 旅行风格
             
         Returns:
             生成的行程数据
@@ -51,7 +50,7 @@ class AIService:
         try:
             # 构建提示词
             prompt = self._build_prompt(
-                destination, start_date, end_date, budget, preferences, travel_style
+                destination, start_date, end_date, budget, preferences, travelers
             )
             
             # 调用API
@@ -108,7 +107,7 @@ class AIService:
         end_date: str,
         budget: Optional[float] = None,
         preferences: Optional[str] = None,
-        travel_style: Optional[str] = None
+        travelers: Optional[int] = None
     ) -> str:
         """构建AI提示词"""
         
@@ -132,9 +131,9 @@ class AIService:
         
         if preferences:
             prompt += f"- 偏好：{preferences}\n"
-            
-        if travel_style:
-            prompt += f"- 旅行风格：{travel_style}\n"
+
+        if travelers is not None:
+            prompt += f"- 人数：{travelers}人\n"
         
         prompt += """
 请严格按照以下JSON格式返回行程规划，不要添加任何其他文字说明：
@@ -212,6 +211,7 @@ class AIService:
 3. 活动类型包括：景点、餐饮、住宿、交通、购物、娱乐等
 4. 费用要符合实际情况，免费景点费用为0
 5. 时间安排要连贯合理，考虑交通时间
+6. 规划需考虑旅行人数（例如分餐、交通与住宿安排）
 6. 只返回JSON格式，不要任何其他文字
 """
         

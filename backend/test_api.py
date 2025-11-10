@@ -69,7 +69,7 @@ def test_itinerary_generation(token):
             "end_date": end_date,
             "budget": 5000,
             "preferences": "美食, 文化",
-            "travel_style": "leisure"
+            "travelers": 2
         }
         
         response = requests.post(

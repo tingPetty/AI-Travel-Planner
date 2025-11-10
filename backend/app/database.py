@@ -4,6 +4,7 @@
 """
 
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -12,8 +13,12 @@ from dotenv import load_dotenv
 # 加载环境变量
 load_dotenv()
 
-# 获取数据库URL
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./travel_planner.db")
+# 计算后端目录，构造默认数据库的绝对路径，避免受工作目录影响
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_DB_PATH = BACKEND_DIR / "travel_planner.db"
+
+# 获取数据库URL（优先环境变量），否则使用绝对路径的 SQLite 文件
+DATABASE_URL = os.getenv("DATABASE_URL") or f"sqlite:///{DEFAULT_DB_PATH.as_posix()}"
 
 # 创建数据库引擎
 engine = create_engine(

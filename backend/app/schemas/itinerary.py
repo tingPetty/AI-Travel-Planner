@@ -13,7 +13,7 @@ class ItineraryGenerateRequest(BaseModel):
     end_date: str = Field(..., description="结束日期 (YYYY-MM-DD)", pattern=r'^\d{4}-\d{2}-\d{2}$')
     budget: Optional[float] = Field(None, description="预算金额", ge=0)
     preferences: Optional[str] = Field(None, description="用户偏好", max_length=500)
-    travel_style: Optional[str] = Field(None, description="旅行风格", max_length=100)
+    travelers: Optional[int] = Field(None, description="旅行人数", ge=1)
     title: Optional[str] = Field(None, description="行程标题", max_length=200)
 
 class ItineraryUpdateRequest(BaseModel):
@@ -23,6 +23,7 @@ class ItineraryUpdateRequest(BaseModel):
     start_date: Optional[str] = Field(None, description="开始日期 (YYYY-MM-DD)", pattern=r'^\d{4}-\d{2}-\d{2}$')
     end_date: Optional[str] = Field(None, description="结束日期 (YYYY-MM-DD)", pattern=r'^\d{4}-\d{2}-\d{2}$')
     budget: Optional[float] = Field(None, description="预算金额", ge=0)
+    travelers: Optional[int] = Field(None, description="旅行人数", ge=1)
     status: Optional[str] = Field(None, description="行程状态")
     itinerary: Optional[Dict[str, Any]] = Field(None, description="详细行程")
 
@@ -50,6 +51,7 @@ class ItineraryResponse(BaseModel):
     start_date: datetime = Field(..., description="开始日期")
     end_date: datetime = Field(..., description="结束日期")
     budget: Optional[float] = Field(None, description="预算金额")
+    travelers: Optional[int] = Field(None, description="旅行人数")
     status: str = Field(..., description="行程状态")
     itinerary: Optional[Dict[str, Any]] = Field(None, description="详细行程")
     created_at: datetime = Field(..., description="创建时间")
@@ -62,6 +64,7 @@ class ItineraryListResponse(BaseModel):
     destination: str = Field(..., description="目的地")
     start_date: datetime = Field(..., description="开始日期")
     end_date: datetime = Field(..., description="结束日期")
+    travelers: Optional[int] = Field(None, description="旅行人数")
     status: str = Field(..., description="行程状态")
     created_at: datetime = Field(..., description="创建时间")
 

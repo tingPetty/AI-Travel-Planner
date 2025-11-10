@@ -40,7 +40,7 @@ def test_ai_service():
         "end_date": "2024-12-03",
         "budget": 3000.0,
         "preferences": "喜欢历史文化景点，不喜欢太累的行程",
-        "travel_style": "文化"
+        "travelers": 2
     }
     
     print("测试参数:")
