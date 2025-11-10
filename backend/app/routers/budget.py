@@ -20,7 +20,7 @@ from openai import OpenAI
 from app.database import get_db
 from app.models.trip import Trip
 from app.models.expense import Expense
-from app.schemas.budget import ExpenseCreate, ExpenseResponse, BudgetSummaryResponse, AIExpenseExtractRequest
+from app.schemas.budget import ExpenseCreate, ExpenseResponse, BudgetSummaryResponse, AIExpenseExtractRequest, AIBudgetAnalysisResponse
 from app.utils.dependencies import get_current_user
 from app.models.user import User
 
@@ -206,3 +206,160 @@ async def ai_expense_extract(request: AIExpenseExtractRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"调用AI解析失败: {str(e)}")
+
+
+def build_budget_analysis_prompt(total_budget: Optional[float], total_expenses: float, remaining_budget: Optional[float], expenses: List[Expense]) -> str:
+    """构建用于预算分析的提示词。"""
+    # 类别中文映射
+    category_labels = {
+        'transport': '交通',
+        'accommodation': '住宿',
+        'food': '食物',
+        'entertainment': '娱乐',
+        'shopping': '购物',
+        'other': '其他'
+    }
+    
+    # 按类别统计开销
+    category_expenses = {}
+    for expense in expenses:
+        cat = expense.category
+        if cat not in category_expenses:
+            category_expenses[cat] = 0
+        category_expenses[cat] += float(expense.amount)
+    
+    # 构建开销明细（使用中文类别）
+    expense_details = "\n".join([
+        f"- {expense.expense_date.strftime('%Y-%m-%d')}: {category_labels.get(expense.category, expense.category)} - ¥{float(expense.amount):.2f} ({expense.description or '无描述'})"
+        for expense in expenses
+    ])
+    
+    # 构建类别统计（使用中文类别）
+    category_summary = "\n".join([
+        f"- {category_labels.get(cat, cat)}: ¥{amount:.2f}"
+        for cat, amount in category_expenses.items()
+    ])
+    
+    budget_info = f"总预算: ¥{total_budget:.2f}" if total_budget is not None else "总预算: 未设置"
+    remaining_info = f"剩余资金: ¥{remaining_budget:.2f}" if remaining_budget is not None else "剩余资金: 未设置"
+    
+    return f"""
+你是一位专业的旅游预算分析师。请根据以下信息对当前行程的开销进行分析，并给出三条实用的旅游开销建议。
+
+## 预算信息
+{budget_info}
+已花费: ¥{total_expenses:.2f}
+{remaining_info}
+
+## 开销明细
+{expense_details}
+
+## 各类别开销汇总
+{category_summary}
+
+## 任务要求
+1. 对当前的开销情况进行简要分析（100字以内），包括：
+   - 开销是否合理
+   - 各类别支出占比情况
+   - 预算使用情况（如果有预算）
+
+2. 给出三条具体的旅游开销建议，每条建议应该：
+   - 针对性强，基于当前开销数据
+   - 实用可行
+   - 简洁明了（每条30字以内）
+
+## 输出格式
+请严格按照以下JSON格式输出，不要包含其他文字：
+{{
+  "analysis": "这里是开销分析内容",
+  "suggestions": [
+    "建议1",
+    "建议2",
+    "建议3"
+  ]
+}}
+"""
+
+
+@router.get("/ai-analysis", response_model=AIBudgetAnalysisResponse)
+async def ai_budget_analysis(
+    trip_id: int = Query(..., description="行程ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """AI预算分析：分析当前行程的开销情况并给出建议。"""
+    # 校验行程存在且归属当前用户
+    trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user.id).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="行程不存在或无权限")
+    
+    # 获取费用记录
+    expenses = db.query(Expense).filter(Expense.trip_id == trip_id).order_by(Expense.expense_date.asc()).all()
+    
+    if not expenses:
+        raise HTTPException(status_code=400, detail="当前行程暂无开销记录，无法进行分析")
+    
+    # 计算预算汇总
+    total_expenses = sum(float(e.amount) for e in expenses)
+    total_budget = float(trip.budget) if trip.budget is not None else None
+    remaining_budget = (total_budget - total_expenses) if total_budget is not None else None
+    
+    # 调用AI分析
+    api_key = os.getenv("DASHSCOPE_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="环境变量缺失：DASHSCOPE_API_KEY")
+    
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        timeout=60.0,
+    )
+    model = os.getenv("DASHSCOPE_MODEL", "qwen-plus")
+    
+    system_prompt = (
+        "你是一位专业的旅游预算分析师，擅长分析旅游开销并给出实用建议。"
+        "请严格按照要求的JSON格式输出，不要包含其他文字。"
+    )
+    
+    prompt = build_budget_analysis_prompt(total_budget, total_expenses, remaining_budget, expenses)
+    
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+        )
+        
+        content = completion.choices[0].message.content
+        
+        # 解析JSON响应
+        try:
+            result = json.loads(content)
+            return AIBudgetAnalysisResponse(
+                analysis=result.get("analysis", "分析结果解析失败"),
+                suggestions=result.get("suggestions", ["建议1", "建议2", "建议3"])
+            )
+        except json.JSONDecodeError:
+            # 尝试从响应中提取JSON
+            start_idx = content.find("{")
+            end_idx = content.rfind("}")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                json_str = content[start_idx : end_idx + 1]
+                try:
+                    result = json.loads(json_str)
+                    return AIBudgetAnalysisResponse(
+                        analysis=result.get("analysis", "分析结果解析失败"),
+                        suggestions=result.get("suggestions", ["建议1", "建议2", "建议3"])
+                    )
+                except Exception:
+                    pass
+            # 如果无法解析，返回默认值
+            return AIBudgetAnalysisResponse(
+                analysis="AI分析结果解析失败，请稍后重试",
+                suggestions=["建议1", "建议2", "建议3"]
+            )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"调用AI分析失败: {str(e)}")

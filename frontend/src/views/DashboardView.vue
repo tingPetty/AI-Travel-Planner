@@ -8,7 +8,7 @@ import {
   deleteItinerary as deleteItineraryAPI,
   type ItineraryListResponse,
 } from '@/api/itinerary'
-import { getExpenses, getBudgetSummary, type ExpenseResponse, type BudgetSummaryResponse } from '@/api/budget'
+import { getExpenses, getBudgetSummary, getAIBudgetAnalysis, type ExpenseResponse, type BudgetSummaryResponse, type AIBudgetAnalysisResponse } from '@/api/budget'
 import BudgetSummary from '@/components/budget/BudgetSummary.vue'
 import ExpenseDialog from '@/components/budget/ExpenseDialog.vue'
 
@@ -25,6 +25,9 @@ const expenses = ref<ExpenseResponse[]>([])
 const summary = ref<BudgetSummaryResponse | null>(null)
 const budgetLoading = ref(false)
 const showExpenseDialog = ref(false)
+// AI预算分析相关
+const aiAnalysisLoading = ref(false)
+const aiAnalysisResult = ref<AIBudgetAnalysisResponse | null>(null)
 // 费用列表等宽列宽计算
 const expensesTableRef = ref<any | null>(null)
 const colWidth = ref(240)
@@ -38,7 +41,6 @@ const updateColWidth = () => {
     colWidth.value = 240
   }
 }
-// 新建行程迁移为独立页面，此处不再维护表单状态
 
 // 旅行偏好选项
 // const preferenceOptions = [
@@ -188,28 +190,53 @@ const loadBudgetData = async (tripId: number) => {
 // 当行程数据加载完成后默认选中第一个并加载预算数据
 watch(trips, (val) => {
   if (activeMenu.value === 'budget' && val.length > 0 && selectedTripId.value == null) {
-    selectedTripId.value = val[0].id
-    loadBudgetData(selectedTripId.value)
+    selectedTripId.value = val[0]?.id
+    if (selectedTripId.value) {
+      loadBudgetData(selectedTripId.value)
+    }
   }
 })
 
 watch(activeMenu, (menu) => {
   if (menu === 'budget' && trips.value.length > 0) {
     if (selectedTripId.value == null) {
-      selectedTripId.value = trips.value[0].id
+      selectedTripId.value = trips.value[0]?.id
     }
-    loadBudgetData(selectedTripId.value!)
+    if (selectedTripId.value) {
+      loadBudgetData(selectedTripId.value)
+    }
   }
 })
 
 const onTripChange = (val: number) => {
   selectedTripId.value = val
+  aiAnalysisResult.value = null // 清空AI分析结果
   loadBudgetData(val)
 }
 
 const onExpenseCreated = () => {
   if (selectedTripId.value) {
     loadBudgetData(selectedTripId.value)
+  }
+}
+
+// AI预算分析
+const handleAIAnalysis = async () => {
+  if (!selectedTripId.value) {
+    ElMessage.warning('请先选择行程')
+    return
+  }
+  
+  try {
+    aiAnalysisLoading.value = true
+    const result = await getAIBudgetAnalysis(selectedTripId.value) as AIBudgetAnalysisResponse
+    aiAnalysisResult.value = result
+    ElMessage.success('AI分析完成')
+  } catch (error: any) {
+    console.error('AI预算分析失败:', error)
+    // 错误消息已由axios拦截器显示，这里不再重复显示
+  } finally {
+    aiAnalysisLoading.value = false
   }
 }
 
@@ -342,6 +369,45 @@ const onExpenseCreated = () => {
             <el-option v-for="trip in trips" :key="trip.id" :label="`#${trip.id} - ${trip.title}`" :value="trip.id" />
           </el-select>
         </div>
+
+        <!-- AI预算分析卡片 -->
+        <el-card class="ai-analysis-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <span>🌟 AI 预算分析</span>
+              <el-button 
+                type="primary" 
+                @click="handleAIAnalysis" 
+                :loading="aiAnalysisLoading"
+                :disabled="!selectedTripId"
+                size="default"
+                color="#4f7942"
+              >
+                {{ aiAnalysisResult ? '重新分析' : 'AI 预算分析' }}
+              </el-button>
+            </div>
+          </template>
+          
+          <div v-if="aiAnalysisResult" class="analysis-content">
+            <div class="analysis-section">
+              <h4>开销分析</h4>
+              <p class="analysis-text">{{ aiAnalysisResult.analysis }}</p>
+            </div>
+            
+            <div class="suggestions-section">
+              <h4>旅游建议</h4>
+              <ul class="suggestions-list">
+                <li v-for="(suggestion, index) in aiAnalysisResult.suggestions" :key="index">
+                  {{ suggestion }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div v-else class="empty-analysis">
+            <el-empty description="点击按钮开始AI预算分析" :image-size="80" />
+          </div>
+        </el-card>
 
         <!-- 汇总卡片 -->
         <BudgetSummary :summary="summary" />
@@ -544,16 +610,95 @@ const onExpenseCreated = () => {
 .budget-section .filter-bar {
   margin-bottom: 16px;
 }
+
+/* AI预算分析卡片样式 */
+.ai-analysis-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid #edf2ed;
+  box-shadow: 0 2px 12px rgba(143, 188, 143, 0.08);
+}
+
+.ai-analysis-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-analysis-card .card-header span {
+  color: #6b8e6b;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.analysis-content {
+  padding: 8px 0;
+}
+
+.analysis-section,
+.suggestions-section {
+  margin-bottom: 20px;
+}
+
+.analysis-section:last-child,
+.suggestions-section:last-child {
+  margin-bottom: 0;
+}
+
+.analysis-section h4,
+.suggestions-section h4 {
+  margin: 0 0 12px 0;
+  color: #4f7942;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.analysis-text {
+  margin: 0;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.8;
+  padding: 12px;
+  background-color: #f8faf8;
+  border-radius: 8px;
+  border-left: 3px solid #8fbc8f;
+}
+
+.suggestions-list {
+  margin: 0;
+  padding-left: 24px;
+  color: #606266;
+  font-size: 14px;
+  line-height: 2;
+}
+
+.suggestions-list li {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.suggestions-list li::marker {
+  color: #8fbc8f;
+  font-weight: bold;
+}
+
+.empty-analysis {
+  padding: 20px 0;
+  text-align: center;
+}
+
 .expenses-card {
   border-radius: 12px;
   border: 1px solid #edf2ed;
   box-shadow: 0 2px 12px rgba(143, 188, 143, 0.08);
 }
+
 .expenses-card .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .expenses-card .card-header span {
   color: #6b8e6b;
   font-weight: 600;

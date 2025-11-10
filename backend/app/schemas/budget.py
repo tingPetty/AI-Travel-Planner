@@ -38,3 +38,9 @@ class BudgetSummaryResponse(BaseModel):
 class AIExpenseExtractRequest(BaseModel):
     """AI费用提取请求模型"""
     text: str = Field(..., description="需要解析的原始文本")
+
+
+class AIBudgetAnalysisResponse(BaseModel):
+    """AI预算分析响应模型"""
+    analysis: str = Field(..., description="预算分析结果")
+    suggestions: list[str] = Field(..., description="三条旅游开销建议")

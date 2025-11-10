@@ -36,3 +36,12 @@ export function getExpenses(tripId: number) {
 export function getBudgetSummary(tripId: number) {
   return request.get<BudgetSummaryResponse>('/api/budget/summary', { params: { trip_id: tripId } })
 }
+
+export interface AIBudgetAnalysisResponse {
+  analysis: string
+  suggestions: string[]
+}
+
+export function getAIBudgetAnalysis(tripId: number) {
+  return request.get<AIBudgetAnalysisResponse>('/api/budget/ai-analysis', { params: { trip_id: tripId } })
+}
