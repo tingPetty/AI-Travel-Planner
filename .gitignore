@@ -1,0 +1,81 @@
+# 操作系统与通用临时文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# 日志文件
+logs/
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 前端（Node/Vite/工具）
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.cache/
+.parcel-cache/
+.vite/
+**/.vite/
+.eslintcache
+.turbo/
+
+# 覆盖率与报告
+coverage/
+**/coverage/
+.nyc_output/
+coverage-final.json
+lcov.info
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+**/*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+pip-wheel-metadata/
+.coverage
+coverage.xml
+htmlcov/
+pytestdebug.log
+
+# 环境变量文件（保留示例）
+.env
+**/.env
+!**/.env.example
+
+# IDE/编辑器配置（按需保留）
+.vscode/
+**/.vscode/
+.idea/
+
+# 数据库与本地数据文件
+backend/travel_planner.db
+**/*.sqlite3
+**/*.db
+
+# 其它临时目录
+.tmp/
+**/.tmp/
+temp/
+**/temp/
