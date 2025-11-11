@@ -11,9 +11,12 @@
       <el-skeleton :rows="8" animated />
     </div>
 
-    <!-- 编辑表单 -->
-    <div v-else-if="tripData" class="edit-form">
-      <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
+    <!-- 编辑表单和地图 -->
+    <div v-else-if="tripData" class="edit-form-container">
+      <el-row :gutter="20" class="main-layout">
+        <!-- 左侧表单 -->
+        <el-col :span="12" class="form-column">
+          <el-form :model="formData" :rules="rules" ref="formRef" label-width="80px">
         <!-- 基本信息 -->
         <el-card class="form-section" shadow="hover">
           <template #header>
@@ -99,48 +102,48 @@
             <h3 class="day-title">{{ dayKey.toUpperCase() }} - {{ day.date }}</h3>
             
             <div v-for="(activity, actIndex) in day.activities" :key="actIndex" class="activity-item">
-              <el-row :gutter="20">
-                <el-col :span="5">
-                  <el-form-item :label="`时间`">
+              <el-row :gutter="16">
+                <el-col :span="6">
+                  <el-form-item label="时间" label-width="60px">
                     <el-input v-model="activity.time" placeholder="时间" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="10">
-                  <el-form-item :label="`活动`">
+                <el-col :span="11">
+                  <el-form-item label="活动" label-width="50px">
                     <el-input v-model="activity.activity" placeholder="活动名称" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="9">
-                  <el-form-item :label="`地点`">
+                <el-col :span="7">
+                  <el-form-item label="地点" label-width="50px">
                     <el-input v-model="activity.location" placeholder="地点" />
                   </el-form-item>
                 </el-col>
               </el-row>
               
-              <el-row :gutter="20">
+              <el-row :gutter="16">
                 <el-col :span="6">
-                  <el-form-item :label="`持续时间`">
+                  <el-form-item label="持续时间" label-width="70px">
                     <el-input v-model="activity.duration" placeholder="持续时间" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="6">
-                  <el-form-item :label="`类型`">
+                  <el-form-item label="类型" label-width="50px">
                     <el-input v-model="activity.type" placeholder="活动类型" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="6">
-                  <el-form-item :label="`费用`">
+                  <el-form-item label="费用" label-width="50px">
                     <el-input-number v-model="activity.cost" :min="0" placeholder="费用" style="width: 100%" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="6" style="padding-left: 40px;">
+                <el-col :span="6" class="delete-button-col">
                   <el-button @click="removeActivity(dayKey, actIndex)" type="danger" size="small" icon="Delete">删除该活动</el-button>
                 </el-col>
               </el-row>
               
-              <el-row :gutter="20">
+              <el-row :gutter="16">
                 <el-col :span="24">
-                  <el-form-item :label="`描述`">
+                  <el-form-item label="描述" label-width="50px">
                     <el-input 
                       v-model="activity.description" 
                       placeholder="活动描述" 
@@ -157,12 +160,26 @@
           </div>
         </el-card>
 
-        <!-- 操作按钮 -->
-        <div class="form-actions">
-          <el-button @click="goBack" size="large">取消</el-button>
-          <el-button type="primary" @click="saveTrip" :loading="saving" size="large" color="#4f7942">保存</el-button>
-        </div>
-      </el-form>
+            <!-- 操作按钮 -->
+            <div class="form-actions">
+              <el-button @click="goBack" size="large">取消</el-button>
+              <el-button type="primary" @click="saveTrip" :loading="saving" size="large" color="#4f7942">保存</el-button>
+            </div>
+          </el-form>
+        </el-col>
+        
+        <!-- 右侧地图 -->
+        <el-col :span="12" class="map-column">
+          <el-card class="map-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>行程地图</span>
+              </div>
+            </template>
+            <MapView :activities="allActivities" />
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
 
     <!-- 错误状态 -->
@@ -178,10 +195,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getTripById, updateTrip } from '@/api/itinerary'
+import MapView from '@/components/MapView.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -219,6 +237,26 @@ const rules = {
     { required: true, message: '请选择结束日期', trigger: 'change' }
   ]
 }
+
+// 收集所有活动数据，用于地图标记
+const allActivities = computed(() => {
+  if (!formData.itinerary) {
+    return []
+  }
+  
+  const activities: any[] = []
+  Object.keys(formData.itinerary).forEach(dayKey => {
+    const day = formData.itinerary[dayKey]
+    if (day && day.activities && Array.isArray(day.activities)) {
+      day.activities.forEach((activity: any) => {
+        activities.push(activity)
+      })
+    }
+  })
+  
+  console.log('[EditTripView] 收集到的活动数据:', activities)
+  return activities
+})
 
 // 加载行程数据
 const loadTripData = async () => {
@@ -319,8 +357,9 @@ onMounted(() => {
 <style scoped>
 .edit-trip-container {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .page-header {
@@ -343,8 +382,29 @@ onMounted(() => {
   padding: 40px;
 }
 
-.edit-form {
+.edit-form-container {
   background: #fff;
+}
+
+.main-layout {
+  min-height: 600px;
+}
+
+.form-column {
+  padding-right: 10px;
+}
+
+.map-column {
+  padding-left: 10px;
+}
+
+.map-card {
+  height: 100%;
+}
+
+.map-card :deep(.el-card__body) {
+  padding: 0;
+  height: calc(100% - 57px);
 }
 
 .form-section {
@@ -392,15 +452,31 @@ onMounted(() => {
   font-weight: 500;
   color: #606266;
 }
-/* 
+
 .delete-button-col {
   display: flex;
   align-items: flex-end;
-  padding-top: 20px;
-} */
+  padding-top: 0;
+  justify-content: flex-start;
+  padding-left: 8px;
+}
 
 .delete-button-col .el-button {
-  margin-bottom: 22px;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+/* 确保输入框能完整显示内容 */
+.activity-item .el-input,
+.activity-item .el-input-number,
+.activity-item .el-textarea {
+  width: 100%;
+}
+
+.activity-item .el-input__inner,
+.activity-item .el-textarea__inner {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-actions {
@@ -421,6 +497,24 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  
+  .form-column,
+  .map-column {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-bottom: 20px;
+  }
+  
+  .map-card {
+    min-height: 500px;
+  }
+}
+
 @media (max-width: 768px) {
   .edit-trip-container {
     padding: 10px;
