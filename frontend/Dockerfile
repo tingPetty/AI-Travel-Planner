@@ -19,6 +19,13 @@ ARG VITE_AMAP_KEY
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_AMAP_KEY=$VITE_AMAP_KEY
 
+# 打印环境变量以便调试（不会暴露在最终镜像中）
+RUN echo "Building with VITE_API_BASE_URL=$VITE_API_BASE_URL" && \
+    echo "Building with VITE_AMAP_KEY=${VITE_AMAP_KEY:0:10}..." && \
+    if [ -z "$VITE_AMAP_KEY" ]; then \
+      echo "WARNING: VITE_AMAP_KEY is not set!"; \
+    fi
+
 # 构建应用（跳过类型检查以加快 Docker 构建）
 RUN npm run build:docker
 
