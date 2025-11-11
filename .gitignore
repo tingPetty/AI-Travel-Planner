@@ -74,6 +74,12 @@ backend/travel_planner.db
 **/*.sqlite3
 **/*.db
 
+# 测试文件和代码测试目录
+codetest/
+**/test_*.py
+simple_test.py
+view_db.py
+
 # 其它临时目录
 .tmp/
 **/.tmp/
