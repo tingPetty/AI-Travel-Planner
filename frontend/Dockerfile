@@ -29,7 +29,8 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # 设置默认环境变量（可在运行时覆盖）
-ENV VITE_AMAP_KEY=""
+# 注意：这里设置的是默认值，实际使用时应通过 docker run -e 或 docker-compose 传入
+ENV VITE_AMAP_KEY="4c026e1e00c2fa03c41aa9292062021c"
 ENV VITE_API_BASE_URL="http://localhost:8000"
 
 EXPOSE 80

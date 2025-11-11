@@ -82,6 +82,9 @@ docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-tra
 ```
 
 ### 步骤 2：运行容器
+
+**重要提示**：前端容器需要传入环境变量才能正常显示地图！
+
 ```bash
 # 创建网络
 docker network create travel-planner-network
@@ -95,11 +98,24 @@ docker run -d \
   -v $(pwd)/backend/data:/app/data \
   crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
 
-# 运行前端
+# 运行前端（必须传入环境变量）
 docker run -d \
   --name frontend \
   --network travel-planner-network \
   -p 80:80 \
+  -e VITE_AMAP_KEY=你的高德地图API密钥 \
+  -e VITE_API_BASE_URL=http://localhost:8000 \
+  crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
+```
+
+**或者使用 .env 文件**：
+```bash
+# 运行前端（使用 .env 文件）
+docker run -d \
+  --name frontend \
+  --network travel-planner-network \
+  -p 80:80 \
+  --env-file .env \
   crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
 ```
 
