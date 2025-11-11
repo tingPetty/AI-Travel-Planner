@@ -19,8 +19,8 @@ ARG VITE_AMAP_KEY
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_AMAP_KEY=$VITE_AMAP_KEY
 
-# 构建应用
-RUN npm run build
+# 构建应用（跳过类型检查以加快 Docker 构建）
+RUN npm run build:docker
 
 # 生产环境
 FROM nginx:alpine
