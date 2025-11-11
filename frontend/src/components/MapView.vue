@@ -37,6 +37,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import { Loading } from '@element-plus/icons-vue'
+import { getAmapKey } from '@/utils/config'
 
 interface Activity {
   time?: string
@@ -80,11 +81,12 @@ const locationCache = new Map<
 // 初始化地图
 const initMap = async () => {
   try {
+    const amapKey = getAmapKey()
     console.log('[地图] 开始初始化高德地图...')
-    console.log('[地图] 使用 Key:', import.meta.env.VITE_AMAP_KEY ? '已配置' : '未配置')
+    console.log('[地图] 使用 Key:', amapKey ? '已配置' : '未配置')
 
     AMapInstance = await AMapLoader.load({
-      key: import.meta.env.VITE_AMAP_KEY,
+      key: amapKey,
       version: '2.0',
       plugins: [], // 不再需要 Geocoder 和 PlaceSearch 插件，改用 Web 服务 API
     })
@@ -132,7 +134,7 @@ const searchLocation = async (locationName: string): Promise<any> => {
   // 添加延迟，避免触发频率限制（每个请求间隔 200ms）
   await delay(200)
 
-  const apiKey = import.meta.env.VITE_AMAP_KEY
+  const apiKey = getAmapKey()
 
   return new Promise((resolve, reject) => {
     // 使用 JSONP 方式调用 API，避免 CORS 问题

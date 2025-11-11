@@ -11,22 +11,8 @@ RUN npm install
 # 复制应用代码
 COPY . .
 
-# 构建参数（从 docker-compose 或 docker build 传入）
-ARG VITE_API_BASE_URL=http://localhost:8000
-ARG VITE_AMAP_KEY
-
-# 设置环境变量供 Vite 构建使用
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_AMAP_KEY=$VITE_AMAP_KEY
-
-# 打印环境变量以便调试（不会暴露在最终镜像中）
-RUN echo "Building with VITE_API_BASE_URL=$VITE_API_BASE_URL" && \
-    echo "Building with VITE_AMAP_KEY=${VITE_AMAP_KEY:0:10}..." && \
-    if [ -z "$VITE_AMAP_KEY" ]; then \
-      echo "WARNING: VITE_AMAP_KEY is not set!"; \
-    fi
-
 # 构建应用（跳过类型检查以加快 Docker 构建）
+# 注意：不再需要构建时的环境变量，所有配置在运行时注入
 RUN npm run build:docker
 
 # 生产环境
@@ -38,6 +24,15 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # 复制 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# 复制启动脚本
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# 设置默认环境变量（可在运行时覆盖）
+ENV VITE_AMAP_KEY=""
+ENV VITE_API_BASE_URL="http://localhost:8000"
+
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# 使用启动脚本替代直接启动 nginx
+ENTRYPOINT ["/entrypoint.sh"]

@@ -3,10 +3,11 @@
  */
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { getApiBaseUrl } from '@/utils/config'
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: 'http://localhost:8000', // 后端API地址
+  baseURL: getApiBaseUrl(), // 后端API地址（运行时配置）
   timeout: 120000, // 请求超时时间 (2分钟，适应AI生成的长时间)
   headers: {
     'Content-Type': 'application/json'
