@@ -3,10 +3,33 @@ AI Travel Planner - FastAPI Backend
 主应用入口文件
 """
 
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, itinerary, budget, speech_recognition, text_parse
 import uvicorn
+
+# 加载.env文件中的环境变量
+# import logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+
+# # 显示当前工作目录和.env文件路径
+# current_dir = os.getcwd()
+# env_file_path = os.path.join(current_dir, '.env')
+# logger.info(f"当前工作目录: {current_dir}")
+# logger.info(f"查找.env文件路径: {env_file_path}")
+# logger.info(f".env文件是否存在: {os.path.exists(env_file_path)}")
+
+# 加载.env文件（使用override=True强制覆盖系统环境变量）
+load_result = load_dotenv(override=True)
+# logger.info(f"load_dotenv()执行结果: {load_result}")
+# logger.info("使用 override=True 强制覆盖系统环境变量")
+
+# # 显示加载后的关键环境变量
+# logger.info(f"加载后的ALIYUN_TOKEN: {os.getenv('ALIYUN_TOKEN')}")
+# logger.info(f"加载后的ALIYUN_APP_KEY: {os.getenv('ALIYUN_APP_KEY')}")
 
 # 创建 FastAPI 应用实例
 app = FastAPI(

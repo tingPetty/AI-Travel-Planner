@@ -266,12 +266,23 @@ const uploadAndRecognize = async (blob: Blob) => {
     const res = await request.post('/api/speech/recognize?format=wav&sample_rate=16000', form, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-    if (res?.success && res?.recognized_text) {
+    
+    // 在浏览器控制台打印识别结果详情
+    console.log('🎙️ ASR识别结果详情:', res)
+    
+    if (res?.success) {
+      console.log('✅ 识别成功，文本:', res.recognized_text)
       recognizedText.value = res.recognized_text
       ElMessage.success('语音识别成功')
       // 自动调用解析并填充
       await parseTextAndFill()
     } else {
+      console.error('❌ ASR识别失败:', {
+        success: res?.success,
+        error: res?.error,
+        status_code: res?.status_code,
+        raw: res?.raw
+      })
       ElMessage.error('语音识别失败')
     }
   } catch (error: any) {

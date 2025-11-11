@@ -8,9 +8,14 @@
 import os
 import json
 import http.client
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -62,14 +67,22 @@ def aliyun_asr_recognize(
 
     conn = http.client.HTTPSConnection(host)
     try:
+        # logger.info(f"发送ASR请求到: {host}{request_path}")
+        # logger.info(f"音频数据大小: {len(audio_bytes)} bytes")
+        
         conn.request(method="POST", url=request_path, body=audio_bytes, headers=headers)
         response = conn.getresponse()
 
+        # logger.info(f"ASR响应状态: {response.status} {response.reason}")
+        
         body = response.read()
+        # logger.info(f"ASR响应内容: {body.decode('utf-8', errors='ignore')}")
+        
         try:
             data = json.loads(body)
-        except ValueError:
+        except ValueError as e:
             # 返回格式异常
+            logger.error(f"ASR响应解析失败: {e}, 原始响应: {body}")
             raise HTTPException(status_code=502, detail="ASR响应非JSON格式")
 
         return {
@@ -77,6 +90,9 @@ def aliyun_asr_recognize(
             "http_reason": response.reason,
             "data": data,
         }
+    except Exception as e:
+        logger.error(f"ASR请求异常: {e}")
+        raise
     finally:
         conn.close()
 
@@ -102,9 +118,17 @@ async def recognize_speech(
     token = os.getenv("ALIYUN_TOKEN")
     endpoint = os.getenv("ALIYUN_ASR_ENDPOINT", "https://nls-gateway-cn-shanghai.aliyuncs.com")
 
+    # logger.info(f"环境变量检查 - APP_KEY: {'已设置' if app_key else '未设置'}")
+    # logger.info(f"环境变量检查 - TOKEN: {'已设置' if token else '未设置'}")
+    # if token:
+    #     logger.info(f"当前TOKEN值: {token}")
+    # logger.info(f"使用的端点: {endpoint}")
+
     if not app_key:
+        logger.error("环境变量ALIYUN_APP_KEY未设置")
         raise HTTPException(status_code=500, detail="环境变量缺失：ALIYUN_APP_KEY")
     if not token:
+        logger.error("环境变量ALIYUN_TOKEN未设置")
         raise HTTPException(status_code=500, detail="环境变量缺失：ALIYUN_TOKEN")
 
     # 解析host（http.client需要host与path分离）
@@ -148,8 +172,12 @@ async def recognize_speech(
     data = result.get("data", {})
     status_code = data.get("status")
 
+    # 只保留识别结果详情和识别文本的日志（用于浏览器控制台调试）
+    logger.info(f"ASR识别结果详情: {data}")
+
     if status_code == 20000000:
         recognized_text = data.get("result", "")
+        logger.info(f"识别成功，文本: {recognized_text}")
         return {
             "success": True,
             "recognized_text": recognized_text,
@@ -157,7 +185,9 @@ async def recognize_speech(
         }
     else:
         # 识别失败，返回错误详情
+        logger.error(f"ASR识别失败，状态码: {status_code}, 错误详情: {data}")
         return {
             "success": False,
             "error": data,
+            "status_code": status_code,
         }

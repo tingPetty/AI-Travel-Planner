@@ -1,0 +1,41 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Login to Aliyun Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: registry.cn-hangzhou.aliyuncs.com
+        username: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+        password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: true
+        tags: |
+          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-backend:latest
+          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-backend:${{ github.sha }}
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: |
+          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-frontend:latest
+          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-frontend:${{ github.sha }}

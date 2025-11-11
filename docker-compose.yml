@@ -1,20 +1,6 @@
 version: '3.8'
 
 services:
-  # 前端服务
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - backend
-    networks:
-      - travel-planner-network
-
   # 后端服务
   backend:
     build:
@@ -22,11 +8,25 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=sqlite:///./travel_planner.db
-      - DEBUG=False
+    env_file:
+      - .env
     volumes:
-      - ./backend/data:/app/data
+      - backend-data:/app/data
+    networks:
+      - travel-planner-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+        - VITE_AMAP_KEY=${VITE_AMAP_KEY}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
     networks:
       - travel-planner-network
 
