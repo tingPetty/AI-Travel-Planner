@@ -75,10 +75,10 @@ docker-compose down
 ### 步骤 1：拉取镜像
 ```bash
 # 拉取后端镜像
-docker pull registry.cn-hangzhou.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
+docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
 
 # 拉取前端镜像
-docker pull registry.cn-hangzhou.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
+docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
 ```
 
 ### 步骤 2：运行容器
@@ -93,14 +93,14 @@ docker run -d \
   -p 8000:8000 \
   --env-file .env \
   -v $(pwd)/backend/data:/app/data \
-  registry.cn-hangzhou.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
+  crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
 
 # 运行前端
 docker run -d \
   --name frontend \
   --network travel-planner-network \
   -p 80:80 \
-  registry.cn-hangzhou.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
+  crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
 ```
 
 ## 本地开发

@@ -16,7 +16,7 @@ jobs:
     - name: Login to Aliyun Container Registry
       uses: docker/login-action@v2
       with:
-        registry: registry.cn-hangzhou.aliyuncs.com
+        registry: crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com
         username: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
         password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
     
@@ -27,8 +27,8 @@ jobs:
         file: ./backend/Dockerfile
         push: true
         tags: |
-          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-backend:latest
-          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-backend:${{ github.sha }}
+          crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-backend:latest
+          crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-backend:${{ github.sha }}
     
     - name: Build and push frontend image
       uses: docker/build-push-action@v4
@@ -37,5 +37,5 @@ jobs:
         file: ./frontend/Dockerfile
         push: true
         tags: |
-          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-frontend:latest
-          registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-frontend:${{ github.sha }}
+          crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-frontend:latest
+          crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/${{ secrets.ALIYUN_REGISTRY_NAMESPACE }}/ai-travel-planner-frontend:${{ github.sha }}
