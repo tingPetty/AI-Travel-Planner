@@ -2,13 +2,15 @@
 
 基于阿里云大模型的智能旅行规划系统，支持语音交互、自然语言理解和个性化行程推荐。
 
+**GitHub 仓库**: https://github.com/tingPetty/AI-Travel-Planner
+
 ## 项目功能
 
 - **智能对话**：使用阿里云通义千问大模型进行自然语言交互
 - **语音识别**：集成阿里云语音服务，支持语音输入旅行需求
 - **行程规划**：根据预算、时间、偏好自动生成个性化旅行方案
-- **地图展示**：集成高德地图展示景点位置和路线规划
-- **用户管理**：支持用户注册、登录和历史记录管理
+- **地图展示**：集成高德地图展示景点位置
+- **用户管理**：支持用户注册/登录
 
 ## 技术栈
 
@@ -17,19 +19,25 @@
 - **AI服务**: 阿里云通义千问 + 阿里云语音识别
 - **部署**: Docker + Docker Compose
 
-## 快速开始（使用 Docker）
+## 部署方式
 
-### 前置要求
+本项目提供两种部署方式，请根据实际情况选择：
+
+### 方式一：本地构建部署
+
+适用场景：需要修改代码或首次部署
+
+#### 前置要求
 - 安装 Docker 和 Docker Compose
 - 准备阿里云 API Key（通义千问、语音识别、访问密钥）
 
-### 步骤 1：克隆项目
+#### 步骤 1：克隆项目
 ```bash
 git clone https://github.com/tingPetty/AI-Travel-Planner.git
 cd AI-Travel-Planner
 ```
 
-### 步骤 2：配置环境变量
+#### 步骤 2：配置环境变量
 
 复制环境变量模板并填入你的 API Key：
 ```bash
@@ -53,26 +61,26 @@ ALIYUN_AK_SECRET=你的阿里云AccessKeySecret
 VITE_AMAP_KEY=你的高德地图API密钥
 ```
 
-### 步骤 3：启动服务
+#### 步骤 3：启动服务
 启动 Docker 容器：
 ```bash
 docker-compose up -d
 ```
 
-### 步骤 4：访问应用
+#### 步骤 4：访问应用
 - **前端页面**: http://localhost
 - **后端 API 文档**: http://localhost:8000/docs
 
-### 停止服务
+#### 停止服务
 ```bash
 docker-compose down
 ```
 
-## 使用阿里云镜像仓库部署
+### 方式二：拉取镜像快速部署（推荐用于快速体验）
 
-如果你想直接使用已构建的 Docker 镜像（无需本地构建）：
+适用场景：直接使用已构建的镜像，无需本地构建，快速启动
 
-### 步骤 1：拉取镜像
+#### 步骤 1：拉取镜像
 ```bash
 # 拉取后端镜像
 docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
@@ -81,7 +89,7 @@ docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-tra
 docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
 ```
 
-### 步骤 2：运行容器
+#### 步骤 2：运行容器
 
 **重要提示**：前端容器需要传入环境变量才能正常显示地图！
 
@@ -155,24 +163,49 @@ npm run dev
 └── README.md           # 项目说明
 ```
 
-## API Key 说明
+## API Key 获取指南
 
 本项目使用阿里云服务，需要以下 API Key：
 
-1. **通义千问 API Key** (`DASHSCOPE_API_KEY`): 用于 AI 对话和行程规划
-2. **阿里云语音服务** (`ALIYUN_APP_KEY`, `ALIYUN_TOKEN`): 用于语音识别功能
-3. **阿里云访问密钥** (`ALIYUN_AK_ID`, `ALIYUN_AK_SECRET`): 用于调用阿里云 API
-4. **高德地图 API Key** (`VITE_AMAP_KEY`): 用于地图展示和地理位置服务
+### 1. 通义千问 API Key (`DASHSCOPE_API_KEY`)
+- **用途**: AI 对话和行程规划
+- **获取地址**: https://bailian.console.aliyun.com/?spm=5176.12818093_47.resourceCenter.3.31fe2cc9CIqiHW&tab=model#/api-key
+- **官方文档**: https://bailian.console.aliyun.com/?spm=5176.12818093_47.resourceCenter.3.31fe2cc9CIqiHW&tab=api#/api
 
+### 2. 阿里云语音服务 (`ALIYUN_APP_KEY`, `ALIYUN_TOKEN`)
+- **用途**: 语音识别功能
+- **获取地址**: https://nls-portal.console.aliyun.com/applist
+- **官方文档**: https://help.aliyun.com/zh/isi/getting-started/start-here?spm=a2c4g.11174283.help-menu-30413.d_1_0.232effd9sZqZ38&scm=20140722.H_72138._.OR_help-T_cn~zh-V_1
+- **注意事项**: TOKEN 可以使用“通过控制台获取临时 Token”或者“通过 SDK 获取 Token”的方式获取。
+
+### 3. 阿里云访问密钥 (`ALIYUN_AK_ID`, `ALIYUN_AK_SECRET`)
+- **用途**: 调用阿里云 API
+- **获取地址**: https://ram.console.aliyun.com/manage/ak
+- **官方文档**: https://help.aliyun.com/zh/ram/user-guide/create-an-accesskey-pair 
+
+### 4. 高德地图 API Key (`VITE_AMAP_KEY`)
+- **用途**: 地图展示和地理位置服务
+- **获取地址**: https://console.amap.com/dev/key/app
+- **官方文档**: https://lbs.amap.com/api/javascript-api-v2/guide/abc/prepare
+- **注意**: 需要申请“Web 服务”的密钥，不是“Web 端（JS API）”的密钥
+
+### 配置说明
 所有 API Key 均通过环境变量配置，**不会**写入代码中。请在项目根目录的 `.env` 文件中配置所有密钥。
+
+## 使用说明
+
+### 首次使用
+1. **注册账号**: 首次访问应用时，请先点击「注册」按钮创建一个账号
+2. **登录系统**: 使用注册的账号登录系统
+3. **开始规划**: 登录后即可开始使用 AI 旅行规划功能
+
+### 重要提示
+- **AI 生成时间**: AI 生成行程规划需要 20-30 秒，请耐心等待，不要重复提交
+- **语音识别**: 使用语音输入时，请在安静环境下清晰发音
+- **地图显示**: 如果地图无法显示，请检查 `VITE_AMAP_KEY` 环境变量是否正确配置
 
 ## 注意事项
 
 - 确保 `.env` 文件中的 API Key 有效且有足够的调用额度
 - 首次启动可能需要几分钟来构建 Docker 镜像
-- 数据库文件存储在 `backend/data` 目录下
-- 生产环境建议使用 HTTPS 和更安全的数据库配置
-
-## License
-
-MIT License
+- 如遇到问题，请查看容器日志：`docker logs frontend` 或 `docker logs backend`
