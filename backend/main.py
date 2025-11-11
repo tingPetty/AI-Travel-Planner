@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, itinerary, budget, speech_recognition, text_parse
+from app.database import Base, engine
+from app.models import User, Trip, Expense  # 导入所有模型以确保它们被注册
 import uvicorn
 
 # 加载.env文件中的环境变量
@@ -45,11 +47,25 @@ app.add_middleware(
         "http://localhost:5173",  # Vue 开发服务器地址
         "http://localhost",       # Docker 前端地址
         "http://localhost:80",    # Docker 前端地址（显式端口）
+        "http://127.0.0.1",       # 本地回环地址
+        "http://127.0.0.1:80",    # 本地回环地址（显式端口）
+        "http://127.0.0.1:5173",  # 本地回环地址（开发环境）
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 数据库初始化事件
+@app.on_event("startup")
+async def startup_event():
+    """
+    应用启动时自动创建数据库表
+    如果表已存在则不会重复创建
+    """
+    print("正在初始化数据库...")
+    Base.metadata.create_all(bind=engine)
+    print("数据库初始化完成！")
 
 # 注册路由
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
