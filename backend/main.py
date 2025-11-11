@@ -41,7 +41,11 @@ app = FastAPI(
 # 配置 CORS 中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vue 开发服务器地址
+    allow_origins=[
+        "http://localhost:5173",  # Vue 开发服务器地址
+        "http://localhost",       # Docker 前端地址
+        "http://localhost:80",    # Docker 前端地址（显式端口）
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
