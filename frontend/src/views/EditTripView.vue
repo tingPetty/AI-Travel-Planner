@@ -99,9 +99,18 @@
           </template>
           
           <div v-for="(day, dayKey) in formData.itinerary" :key="dayKey" class="day-section">
-            <h3 class="day-title">{{ dayKey.toUpperCase() }} - {{ day.date }}</h3>
+            <h3 class="day-title">{{ String(dayKey).toUpperCase() }} - {{ day.date }}</h3>
             
             <div v-for="(activity, actIndex) in day.activities" :key="actIndex" class="activity-item">
+              <!-- 删除按钮 -->
+              <el-button 
+                @click="removeActivity(String(dayKey), actIndex)" 
+                class="delete-btn" 
+                type="danger" 
+                size="small" 
+                :icon="Close"
+                circle
+              />
               <el-row :gutter="16">
                 <el-col :span="6">
                   <el-form-item label="时间" label-width="60px">
@@ -121,23 +130,20 @@
               </el-row>
               
               <el-row :gutter="16">
-                <el-col :span="6">
+                <el-col :span="8">
                   <el-form-item label="持续时间" label-width="70px">
                     <el-input v-model="activity.duration" placeholder="持续时间" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="6">
+                <el-col :span="8">
                   <el-form-item label="类型" label-width="50px">
                     <el-input v-model="activity.type" placeholder="活动类型" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="6">
+                <el-col :span="8">
                   <el-form-item label="费用" label-width="50px">
                     <el-input-number v-model="activity.cost" :min="0" placeholder="费用" style="width: 100%" />
                   </el-form-item>
-                </el-col>
-                <el-col :span="6" class="delete-button-col">
-                  <el-button @click="removeActivity(dayKey, actIndex)" type="danger" size="small" icon="Delete">删除该活动</el-button>
                 </el-col>
               </el-row>
               
@@ -156,7 +162,7 @@
               </el-row>
             </div>
             
-            <el-button @click="addActivity(dayKey)" type="primary" size="small" icon="Plus" color="#4f7942">添加活动</el-button>
+            <el-button @click="addActivity(String(dayKey))" type="primary" size="small" icon="Plus" color="#4f7942">添加活动</el-button>
           </div>
         </el-card>
 
@@ -198,6 +204,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Close } from '@element-plus/icons-vue'
 import { getTripById, updateTrip } from '@/api/itinerary'
 import MapView from '@/components/MapView.vue'
 
@@ -438,6 +445,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 6px;
   border: 1px solid #e4e7ed;
+  position: relative;
 }
 
 .activity-item .el-input {
@@ -453,17 +461,35 @@ onMounted(() => {
   color: #606266;
 }
 
-.delete-button-col {
-  display: flex;
-  align-items: flex-end;
-  padding-top: 0;
-  justify-content: flex-start;
-  padding-left: 8px;
+/* 删除按钮样式 */
+.delete-btn {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  z-index: 10;
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  background-color: #f56c6c !important;
+  border-color: #f56c6c !important;
+  box-shadow: 0 2px 4px rgba(245, 108, 108, 0.3);
 }
 
-.delete-button-col .el-button {
-  margin-bottom: 0;
-  white-space: nowrap;
+.delete-btn:hover {
+  background-color: #f78989 !important;
+  border-color: #f78989 !important;
+  transform: scale(1.1);
+}
+
+.delete-btn:focus {
+  background-color: #f56c6c !important;
+  border-color: #f56c6c !important;
+}
+
+.delete-btn .el-icon {
+  font-size: 12px;
+  color: white;
 }
 
 /* 确保输入框能完整显示内容 */

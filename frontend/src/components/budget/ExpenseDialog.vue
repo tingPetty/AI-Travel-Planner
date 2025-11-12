@@ -300,9 +300,51 @@ function resetForm() {
   form.expense_date = ''
 }
 
+// 清除语音识别结果
+function clearVoiceRecognition() {
+  recognizedText.value = ''
+  recognizing.value = false
+  analyzing.value = false
+  waitingTips.value = ''
+  recordingHint.value = '👆 点击开始录音，最长1分钟。直接说支出内容和金额即可。'
+  
+  // 如果正在录音，停止录音
+  if (isRecording.value) {
+    isRecording.value = false
+    if (recordTimer) {
+      clearInterval(recordTimer)
+      recordTimer = null
+    }
+    recordSeconds.value = 0
+    
+    // 清理音频资源
+    try {
+      processorNode && processorNode.disconnect()
+      sourceNode && sourceNode.disconnect()
+    } catch {}
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop())
+      mediaStream = null
+    }
+    try {
+      audioContext?.close()
+      audioContext = null
+    } catch {}
+  }
+}
+
+// 监听弹窗关闭，清除语音识别结果
+watch(() => props.visible, (newVal, oldVal) => {
+  if (oldVal && !newVal) {
+    // 弹窗从显示变为隐藏时，清除语音识别结果
+    clearVoiceRecognition()
+  }
+})
+
 function onCancel() {
   visible.value = false
   resetForm()
+  clearVoiceRecognition()
 }
 
 async function onSubmit() {
@@ -324,6 +366,7 @@ async function onSubmit() {
     visible.value = false
     emits('created')
     resetForm()
+    clearVoiceRecognition()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '新增失败')
   } finally {

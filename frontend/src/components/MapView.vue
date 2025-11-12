@@ -423,10 +423,10 @@ const markLocations = async () => {
     // 创建信息窗口（更详细的内容）
     const infoWindow = new AMapInstance.InfoWindow({
       content: `
-        <div style="padding: 15px; min-width: 250px; max-width: 300px;">
+        <div style="padding: 15px; min-width: 250px; max-width: 300px; position: relative;">
           <div style="font-size: 24px; text-align: center; margin-bottom: 8px;">${icon}</div>
           <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #303133; font-weight: 600; text-align: center;">${loc.activity || '活动'}</h3>
-          <div style="border-top: 1px solid #ebeef5; padding-top: 10px; margin-top: 10px;">
+          <div style="border-top: 1px solid #ebeef5; padding-top: 10px; margin-top: 10px; padding-bottom: 40px;">
             <p style="margin: 6px 0; font-size: 13px; color: #606266;">
               <strong style="color: #303133;">📍 地点:</strong> ${loc.name}
             </p>
@@ -435,6 +435,27 @@ const markLocations = async () => {
             </p>
             ${loc.description ? `<p style="margin: 6px 0; font-size: 13px; color: #606266;"><strong style="color: #303133;">📝 描述:</strong> ${loc.description}</p>` : ''}
           </div>
+          <button 
+            onclick="openAmapSearch('${encodeURIComponent(loc.name)}')" 
+            style="
+              position: absolute; 
+              bottom: 8px; 
+              right: 8px; 
+              background: #4f7942; 
+              color: white; 
+              border: none; 
+              padding: 6px 12px; 
+              border-radius: 4px; 
+              font-size: 12px; 
+              cursor: pointer; 
+              transition: all 0.3s ease;
+              box-shadow: 0 2px 4px rgba(79, 121, 66, 0.3);
+            "
+            onmouseover="this.style.background='#5a8a4d'; this.style.transform='scale(1.05)'"
+            onmouseout="this.style.background='#4f7942'; this.style.transform='scale(1)'"
+          >
+            🗺️ 打开高德地图
+          </button>
         </div>
       `,
       offset: new AMapInstance.Pixel(0, -30),
@@ -509,6 +530,16 @@ watch(
   { deep: true },
 )
 
+// 打开高德地图搜索地点的全局函数
+const openAmapSearch = (locationName: string) => {
+  const decodedName = decodeURIComponent(locationName)
+  const amapUrl = `https://ditu.amap.com/search?query=${encodeURIComponent(decodedName)}`
+  window.open(amapUrl, '_blank')
+}
+
+// 将函数添加到全局 window 对象，供 InfoWindow 中的按钮调用
+;(window as any).openAmapSearch = openAmapSearch
+
 onMounted(() => {
   initMap()
 })
@@ -519,6 +550,8 @@ onUnmounted(() => {
     map.destroy()
     map = null
   }
+  // 清理全局函数
+  delete (window as any).openAmapSearch
 })
 </script>
 

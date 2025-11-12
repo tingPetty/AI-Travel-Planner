@@ -58,23 +58,23 @@ const user = computed(() => authStore.user)
               <el-icon><Compass /></el-icon>
             </div>
             <h3>智能推荐</h3>
-            <p>基于您的偏好和历史数据，AI为您推荐最适合的目的地和活动</p>
+            <p>基于您的基本信息和旅行偏好，AI为您量身定制专属的旅行方案</p>
           </div>
           
           <div class="feature-card">
             <div class="feature-icon">
               <el-icon><User /></el-icon>
             </div>
-            <h3>个性化定制</h3>
-            <p>根据您的兴趣、预算和时间，量身定制专属的旅行方案</p>
+            <h3>语音交互体验</h3>
+            <p>集成阿里云语音识别服务，支持语音输入信息，让规划过程更加便捷自然</p>
           </div>
           
           <div class="feature-card">
             <div class="feature-icon">
               <el-icon><Clock /></el-icon>
             </div>
-            <h3>实时更新</h3>
-            <p>获取最新的天气、交通和景点信息，确保您的旅行顺利进行</p>
+            <h3>费用管理</h3>
+            <p>AI智能解析您的预算，帮助您合理规划旅行开销</p>
           </div>
         </div>
       </div>

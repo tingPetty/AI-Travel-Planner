@@ -366,7 +366,8 @@ const handleAIAnalysis = async () => {
         <!-- 选择行程 -->
         <div class="filter-bar">
           <el-select v-model="selectedTripId" placeholder="选择行程" @change="onTripChange" style="width: 320px">
-            <el-option v-for="trip in trips" :key="trip.id" :label="`#${trip.id} - ${trip.title}`" :value="trip.id" />
+            <!-- <el-option v-for="trip in trips" :key="trip.id" :label="`#${trip.id} - ${trip.title}`" :value="trip.id" /> -->
+             <el-option v-for="trip in trips" :key="trip.id" :label="`# ${trip.title}`" :value="trip.id" />
           </el-select>
         </div>
 
