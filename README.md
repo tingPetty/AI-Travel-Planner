@@ -165,7 +165,7 @@ npm run dev
 
 ## API Key 获取指南
 
-本项目使用阿里云服务，需要以下 API Key：
+本项目使用阿里云服务和高德地图服务，需要以下 API Key：
 
 ### 1. 通义千问 API Key (`DASHSCOPE_API_KEY`)
 - **用途**: AI 对话和行程规划
@@ -187,10 +187,11 @@ npm run dev
 - **用途**: 地图展示和地理位置服务
 - **获取地址**: https://console.amap.com/dev/key/app
 - **官方文档**: https://lbs.amap.com/api/javascript-api-v2/guide/abc/prepare
-- **注意**: 需要申请“Web 服务”的密钥，不是“Web 端（JS API）”的密钥
+- **注意事项**: 需要申请“Web 服务”的密钥，不是“Web 端（JS API）”的密钥
 
 ### 配置说明
-所有 API Key 均通过环境变量配置，**不会**写入代码中。请在项目根目录的 `.env` 文件中配置所有密钥。
+1. 所有 API Key 均通过环境变量配置，**不会**写入代码中。请在项目根目录的 `.env` 文件中配置所有密钥。
+2. 请确保**获取到的阿里云 AccessKey ID、AccessKey Secret、服务鉴权 Token、项目 Appkey 的值归属于同一阿里云账号或同一RAM用户**。
 
 ## 使用说明
 
