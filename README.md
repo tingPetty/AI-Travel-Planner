@@ -80,7 +80,51 @@ docker-compose down
 
 适用场景：直接使用已构建的镜像，无需本地构建，快速启动
 
-#### 步骤 1：拉取镜像
+#### 步骤 1：创建项目目录和配置文件
+```bash
+# 创建空项目目录
+mkdir AI-Travel-Planner
+cd AI-Travel-Planner
+
+# 创建 .env 文件
+```
+
+创建 `.env` 文件，内容参考如下（请替换为你的实际 API Key）：
+```bash
+# ========================================
+# AI 旅行规划助手 - 环境变量配置
+# ========================================
+# 说明：
+# 1. 复制此文件为 .env（项目根目录）
+# 2. 所有 API Key 请替换为你自己的密钥
+# 3. 前后端环境变量已统一在此文件中
+# 4. 使用 Docker 运行时，必须通过 -e 或 --env-file 传入环境变量
+# ========================================
+
+# ============ 后端环境变量 ============
+
+# 通义千问API配置
+DASHSCOPE_API_KEY=your-dashscope-api-key
+
+# 阿里云语音识别配置
+ALIYUN_APP_KEY=your-aliyun-appkey
+ALIYUN_TOKEN=your-aliyun-token
+
+# 阿里云访问密钥
+ALIYUN_AK_ID=your-aliyun-access-key-id
+ALIYUN_AK_SECRET=your-aliyun-access-key-secret
+
+# ============ 前端环境变量 ============
+
+# 高德地图 API Key（前端使用）
+# 获取地址: https://console.amap.com/dev/key/app
+VITE_AMAP_KEY=your-amap-key
+
+# API 基础地址（可选，默认为 http://localhost:8000）
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+#### 步骤 2：拉取镜像
 ```bash
 # 拉取后端镜像
 docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
@@ -89,15 +133,12 @@ docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-tra
 docker pull crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
 ```
 
-#### 步骤 2：运行容器
-
-**重要提示**：前端容器需要传入环境变量才能正常显示地图！
-
+#### 步骤 3：运行容器
 ```bash
 # 创建网络
 docker network create travel-planner-network
 
-# 运行后端（需要配置 .env 文件）
+# 运行后端（如果在 Powershell 中运行命令的话行继续符为反引号`）
 docker run -d \
   --name backend \
   --network travel-planner-network \
@@ -106,7 +147,8 @@ docker run -d \
   -v $(pwd)/backend/data:/app/data \
   crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-backend:latest
 
-# 运行前端（必须传入环境变量）
+# 运行前端（如果在 Powershell 中运行命令的话行继续符为反引号`）
+## 直接传入环境变量
 docker run -d \
   --name frontend \
   --network travel-planner-network \
@@ -114,11 +156,8 @@ docker run -d \
   -e VITE_AMAP_KEY=你的高德地图API密钥 \
   -e VITE_API_BASE_URL=http://localhost:8000 \
   crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
-```
 
-**或者使用 .env 文件**：
-```bash
-# 运行前端（使用 .env 文件）
+## 或者使用 .env 文件
 docker run -d \
   --name frontend \
   --network travel-planner-network \
@@ -126,6 +165,11 @@ docker run -d \
   --env-file .env \
   crpi-8u01t7hyb4lecond.cn-hangzhou.personal.cr.aliyuncs.com/zt-ai-travel-planner/ai-travel-planner-frontend:latest
 ```
+
+#### 步骤 4：访问应用
+容器启动成功后，即可访问应用：
+- **前端页面**: http://localhost
+- **后端 API 文档**: http://localhost:8000/docs
 
 ## 本地开发
 
